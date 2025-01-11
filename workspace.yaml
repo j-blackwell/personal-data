@@ -3,6 +3,7 @@ load_from:
       module_name: bank_statements.definitions
       working_directory: bank_statements/
       location_name: bank_statements
+      executable_path: bank_statements/.venv/bin/python
 # Example of deploying multiple code locations locally
   # - python_module:
   #     module_name: hooli_data_ingest
