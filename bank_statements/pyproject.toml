@@ -7,6 +7,9 @@ requires-python = ">=3.9,<3.13"
 dependencies = [
     "dagster",
     "dagster-cloud",
+    "dagster-duckdb>=0.25.8",
+    "dagster-duckdb-pandas>=0.25.8",
+    "dagster-duckdb-polars>=0.25.8",
     "dagster-webserver>=1.9.8",
     "docling>=2.15.1",
     "pandas>=2.2.3",
