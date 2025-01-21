@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "personal-data"
 version = "0.1.0"
@@ -8,3 +12,11 @@ dependencies = [
     "dagster-webserver>=1.9.6",
     "dagster>=1.9.6",
 ]
+
+[project.scripts]
+local = "scripts.scripts:local"
+db = "scripts.scripts:db"
+validate = "scripts.scripts:validate"
+
+[tool.setuptools.packages]
+find = {}
