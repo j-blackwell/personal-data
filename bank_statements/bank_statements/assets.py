@@ -43,3 +43,28 @@ def sainsburys_manual_raw(context: dg.AssetExecutionContext) -> pl.DataFrame:
         pl.lit(partition_key).str.to_datetime("%Y-%m-%d").alias("STATEMENT_MONTH"),
     )
     return statement
+
+
+@dg.asset()
+def monzo_raw(context: dg.AssetExecutionContext) -> pl.DataFrame:
+    return pl.read_csv("/home/jamesr/Documents/bank-statements/monzo/monzo.csv")
+
+
+@dg.asset()
+def triodos_raw(context: dg.AssetExecutionContext) -> pl.DataFrame:
+    df_raw = pl.read_csv(
+        "/home/jamesr/Documents/bank-statements/triodos/triodos.csv",
+        has_header=False,
+    )
+    df_raw.columns = [
+        "DATE",
+        "SORT_CODE",
+        "ACCOUNT_NUMBER",
+        "AMOUNT_GBP",
+        "TYPE",
+        "DESCRIPTION",
+        "UNKNOWN",
+        "BALANCE",
+    ]
+
+    return df_raw
