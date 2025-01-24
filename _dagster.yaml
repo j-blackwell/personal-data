@@ -1,0 +1,8 @@
+run_retries:
+  enabled: false
+  max_retries: 1
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: QueuedRunCoordinator
+  config:
+    max_concurrent_runs: 1
