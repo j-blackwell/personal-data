@@ -111,6 +111,7 @@ dependencies = [
     { name = "docling" },
     { name = "pandas" },
     { name = "polars" },
+    { name = "rich" },
 ]
 
 [package.optional-dependencies]
@@ -132,6 +133,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "polars", specifier = ">=1.19.0" },
     { name = "pytest", marker = "extra == 'dev'" },
+    { name = "rich", specifier = ">=13.9.4" },
 ]
 
 [[package]]

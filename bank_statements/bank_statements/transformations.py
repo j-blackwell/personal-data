@@ -1,8 +1,12 @@
+import datetime as dt
 from typing import Optional
 
+import dagster as dg
 import pandas as pd
 import polars as pl
 from polars.exceptions import InvalidOperationError
+
+from bank_statements.helpers.pandas import glimpse
 
 
 def parse_amount(x: pl.Expr) -> pl.Expr:
@@ -13,6 +17,63 @@ def parse_amount(x: pl.Expr) -> pl.Expr:
         .str.replace(",", "")
         .cast(pl.Float64)
     )
+
+
+def transform_raw(statement_raw: pd.DataFrame, partition_key: str):
+    statement_raw.columns = [str(x) for x in range(len(statement_raw.columns))]
+    if partition_key == "2024-04-01":
+        statement_raw = statement_raw.drop(["3"], axis=1)
+    elif partition_key == "2024-06-01":
+        first_row = statement_raw.iloc[0]
+        first_row_fixed = pd.DataFrame(
+            [
+                {"0": first_row["0"][:6], "1": first_row["1"], "3": first_row["3"][:9]},
+                {
+                    "0": first_row["0"][7:],
+                    "1": first_row["2"],
+                    "3": first_row["3"][10:],
+                },
+            ]
+        )
+        statement_raw = statement_raw.drop([0], axis=0)
+        statement_raw = statement_raw.drop(["2"], axis=1)
+        statement_raw = pd.concat([statement_raw, first_row_fixed])
+    elif partition_key == "2024-07-01":
+        statement_raw = statement_raw.drop(["3"], axis=1)
+    elif partition_key == "2024-08-01":
+        statement_raw = statement_raw.drop(["3", "4"], axis=1)
+    elif partition_key == "2024-09-01":
+        first_row = statement_raw.iloc[0]
+        second_row = statement_raw.iloc[1]
+        first_row_fixed = pd.DataFrame(
+            [
+                {
+                    "0": first_row["0"][:6],
+                    "1": first_row["1"],
+                    "3": first_row["3"][:9],
+                },
+                {
+                    "0": first_row["0"][7:],
+                    "1": second_row["1"],
+                    "3": first_row["3"][10:],
+                },
+                {
+                    "0": second_row["0"],
+                    "1": second_row["2"],
+                    "3": second_row["3"],
+                },
+            ]
+        )
+        statement_raw = statement_raw.drop([0,1], axis=0)
+        statement_raw = statement_raw.drop(["2", "4"], axis=1)
+        statement_raw = pd.concat([statement_raw, first_row_fixed])
+    elif partition_key == "2024-11-01":
+        statement_raw = statement_raw.drop(["3"], axis=1)
+    elif partition_key == "2024-12-01":
+        statement_raw = statement_raw.drop(["2"], axis=1)
+    statement_raw["STATEMENT_MONTH"] = pd.to_datetime(partition_key)
+    return statement_raw
+
 
 def transform_statement(
     statement_raw: pd.DataFrame,
