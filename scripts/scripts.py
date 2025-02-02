@@ -1,5 +1,7 @@
 from subprocess import run
 
+from bank_statements.bank_statements.helpers.settings import SETTINGS
+
 
 def local():
     run(
@@ -21,14 +23,9 @@ def validate():
 
 
 def db():
-    from dotenv import dotenv_values
-
-    env = dotenv_values()
-    duckdb = env["DUCKDB"]
-    assert duckdb is not None
     run(
         [
             "duckdb",
-            duckdb,
+            SETTINGS.duckdb,
         ]
     )
