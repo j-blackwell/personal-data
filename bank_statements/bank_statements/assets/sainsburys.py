@@ -45,26 +45,35 @@ def sainsburys_manual_raw(context: dg.AssetExecutionContext) -> pl.DataFrame:
     return statement
 
 
-@dg.asset()
-def monzo_raw(context: dg.AssetExecutionContext) -> pl.DataFrame:
-    return pl.read_csv("/home/jamesr/Documents/bank-statements/monzo/monzo.csv")
-
-
-@dg.asset()
-def triodos_raw(context: dg.AssetExecutionContext) -> pl.DataFrame:
-    df_raw = pl.read_csv(
-        "/home/jamesr/Documents/bank-statements/triodos/triodos.csv",
-        has_header=False,
+@dg.asset
+def sainsburys_curated(
+    context: dg.AssetExecutionContext,
+    sainsburys_pdf_raw: pl.DataFrame,
+    sainsburys_manual_raw: pl.DataFrame,
+) -> pl.DataFrame:
+    sainsburys_combined = pl.concat(
+        [
+            sainsburys_pdf_raw.rename(
+                {"0": "DATE", "1": "DESCRIPTION", "2": "AMOUNT_GBP"}
+            ).with_columns(
+                pl.format("{} {}", pl.col("DATE"), pl.col("STATEMENT_MONTH").dt.year())
+            ),
+            sainsburys_manual_raw,
+        ],
+        how="vertical_relaxed",
     )
-    df_raw.columns = [
-        "DATE",
-        "SORT_CODE",
-        "ACCOUNT_NUMBER",
-        "AMOUNT_GBP",
-        "TYPE",
-        "DESCRIPTION",
-        "UNKNOWN",
-        "BALANCE",
-    ]
 
-    return df_raw
+    return sainsburys_combined.with_columns(
+        pl.coalesce(
+            pl.col("DATE").str.to_date("%d %b %Y", strict=False),
+            pl.col("DATE").str.to_date("%d/%m/%y", strict=False),
+            pl.col("STATEMENT_MONTH"),
+        ),
+        pl.when(pl.col("AMOUNT_GBP").str.contains(" CR"))
+        .then(pl.format("-{}", pl.col("AMOUNT_GBP").str.replace(" CR", "")))
+        .otherwise(pl.col("AMOUNT_GBP"))
+        .str.replace(",", "")
+        .replace("", None)
+        .cast(pl.Decimal)
+        .alias("AMOUNT_GBP"),
+    )
